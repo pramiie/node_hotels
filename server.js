@@ -1,7 +1,8 @@
 const express=require('express');
 const app =express();
 const db=require('./db');
-
+require('dotenv').config();
+const PORT=process.env.PORT || 3000;
 
 //body parser is a middleware which is used to parse and extract the body of incoming HTTP requests
 const bodyParser=require('body-parser');
@@ -19,6 +20,6 @@ app.use('/person',personRoutes);
 const menuRoutes=require('./routes/menuRoutes');
 app.use('/menu',menuRoutes);
 
-app.listen(3000,()=>{
+app.listen(PORT,()=>{
     console.log("server run")
 })
