@@ -53,10 +53,17 @@ personSchema.pre('save', async function (next){
         person.password=hashedPassword;
         next();
     }catch(err){
-        consol
+        next(err);
     }
 })
 
-personSchema.method.comparePassword
+personSchema.methods.comparePassword=async function(candidatePassword){
+    try{
+        const isMatch=await bcrypt.compare(candidatePassword,this.password);
+        return isMatch;
+    }catch(err){
+        throw err;
+    }
+}
 const Person=mongoose.model('Person',personSchema);
 module.exports=Person;
