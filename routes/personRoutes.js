@@ -1,30 +1,81 @@
 const express=require('express');
 const router=express.Router();
 const Person=require('./../models/Person');
-router.post('/',async (req,res)=>{
+const {jwtAuthMiddleware,generateToken}=require('./../jwt');
+
+router.post('/login',async (req,res)=>{
+    try{
+        const {username, password} =req.body;
+
+        const user=await Person.findOne({username:username});
+        if(!user || !(await user.comparePassword(password))){
+            res.status(401).json({error:"Invalid username and password"});
+        }
+        const payload = {
+        id:user.id,
+        username:user.username 
+        }
+        const token = generateToken(payload);
+        res.send({token});
+
+        res.status(200).json({response: response , token :token});
+    }catch(err){
+        console.error(err);
+        res.status(500).json({error:'internal server error'});
+    }
+})
+
+router.post('/signup',async (req,res)=>{
     try{
         const data=req.body;
     const newPerson = new Person(data);
      //newPerson.name = data.name;
     const response= await newPerson.save();
     console.log('data save successfully');
-    res.status(200).json(response);
+
+    const payload = {
+        id:response.id,
+        username:response.username 
+    }
+    console.log(JSON.stringify(payload));
+    const token = generateToken(response.username);
+    console.log("Token : ",token);
+
+
+    res.status(200).json({response: response , token :token});
     }catch(error){
         console.log(error);
         res.status(500).json({error:'internal server error'});
     }
 });
 
-router.get('/',async (req,res)=>{
+router.get('/',jwtAuthMiddleware ,async (req,res)=>{
     try{
     const data= await Person.find();
     console.log('data fetch successfully');
     res.status(200).json(data);
     }catch(error){
         console.log(error);
-    res.status(500).json({error:'internal server error'});
+        res.status(500).json({error:'internal server error'});
 
     }
+});
+
+router.get('/profile',jwtAuthMiddleware,async(req,res)=>{
+        try{
+            const userData=req.user;
+            console.log("User Data :",userData);
+
+            const userId= userData.id;
+           // console.log("User id :",userId);
+
+            const user=await Person.findById(userId);
+            res.status(200).json({user});
+
+        }catch(err){
+            console.log(error);
+            res.status(500).json({error:'internal server error'});
+        }
 });
 
 router.get('/:workType',async(req,res)=>{
